@@ -1,25 +1,25 @@
 # Ptero-PlaceholderExpansion
 
-A plugin to retrieve Pterodactyl server information using PlaceholderAPI
+Pterodactylのサーバー情報をPlaceholderAPIで取得するプラグイン
 
-## How to use placeholders
+## プレースホルダーの使用方法
 
-You can use the following placeholders to retrieve Pterodactyl server information.
+以下のプレースホルダーを使用して、Pterodactylのサーバー情報を取得できます。
 
 ```
-%ptero_[serverID]_[JSONpath]%
+%ptero_サーバーID_JSONパス%
 ```
 
-## Sample
+## サンプル
 
-![Screenshot1](assets/screenshot_1.png)
+![スクリーンショット1](assets/screenshot_1.png)
 ```
-"%ptero_9be90f7c_name% server (%ptero_9be90f7c_description%)"
-"Max RAM: %ptero_9be90f7c_limits.memory% MiB"
+"%ptero_9be90f7c_name%鯖 (%ptero_9be90f7c_description%)"
+"最大RAM: %ptero_9be90f7c_limits.memory% MiB"
 ```
 
-### The above example will be as follows if the Pterodactyl API response is as below
-To display the memory of the attributes' limits, it will be `limits.memory`
+### Pterodactyl APIレスポンスが以下の場合上記のようになります
+attributesのlimitsのmemoryを表示したい場合は`limits.memory`となります
 
 ```json
 {
@@ -35,7 +35,7 @@ To display the memory of the attributes' limits, it will be `limits.memory`
             "ip": "mc.kairun.jp",
             "port": 2023
         },
-        "description": "テストサーバーです", // EN: This is a test server
+        "description": "テストサーバーです",
         "limits": {
             "memory": 4096,
             "swap": 16384,
