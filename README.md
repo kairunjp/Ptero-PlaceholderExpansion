@@ -1,30 +1,41 @@
 # Ptero-PlaceholderExpansion
 
-## Pterodactylのサーバー情報をPlaceholderAPIで取得するプラグイン
-### プレースホルダーの使用方法
+Pterodactylのサーバー情報をPlaceholderAPIで取得するプラグイン
+
+## プレースホルダーの使用方法
 
 以下のプレースホルダーを使用して、Pterodactylのサーバー情報を取得できます。
 
 ```
-%ptero_サーバーID_変数%
+%ptero_サーバーID_JSONパス%
 ```
 
-#### 例\
+## サンプル
+
+![スクリーンショット1](assets/screenshot_1.png)
+```
+"%ptero_9be90f7c_name%鯖 (%ptero_9be90f7c_description%)"
+"最大RAM: %ptero_9be90f7c_limits.memory% MiB"
+```
+
+### Pterodactyl APIレスポンスが以下の場合上記のようになります
+attributesのlimitsのmemoryを表示したい場合は`limits.memory`となります
+
 ```json
 {
     "attributes": {
         "server_owner": true,
-        "identifier": "f684cac7",
+        "identifier": "9be90f7c",
         "internal_id": 18,
-        "uuid": "f684cac7-d9cb-414f-b9a4-70ed28cc9da6",
-        "name": "hub",
+        "uuid": "56d995cd-8195-4f74-a382-0b90786c0f54",
+        "name": "test",
         "node": "rack-server",
         "is_node_under_maintenance": false,
         "sftp_details": {
             "ip": "mc.kairun.jp",
             "port": 2023
         },
-        "description": "異論なサーバーをつなげるサーバー",
+        "description": "テストサーバーです",
         "limits": {
             "memory": 4096,
             "swap": 16384,
@@ -34,10 +45,8 @@
             "threads": null,
             "oom_disabled": true
         },
-        ....
+....
 ```
 
-```
-"%ptero_f684cac7_name%鯖 (%ptero_f684cac7_description%)"
-"%ptero_f684cac7_limits.memory% MiB"
-```
+### Special Thanks
+- Kamesuta
