@@ -3,6 +3,8 @@ package jp.kairun.pteroPlaceholderExpansion;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.clip.placeholderapi.expansion.Cacheable;
@@ -44,7 +46,7 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
 
     @Override
     public @NotNull String getVersion() {
-        return "1.0.0";
+        return "1.0.2";
     }
 
     @Override
@@ -101,18 +103,35 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
         }
 
         String[] pathSplit = path.split("\\.");
-        JsonObject attributes = serverData;
-        for (int i = 0; i < pathSplit.length; i++) {
-            if (attributes.has(pathSplit[i])) {
-                if (i == pathSplit.length - 1) {
-                    return attributes.get(pathSplit[i]).getAsString();
+        JsonElement currentElement = serverData;
+
+        for (String key : pathSplit) {
+            if (key.matches(".*\\[\\d+]$")) {
+                String arrayKey = key.substring(0, key.indexOf("["));
+                int index = Integer.parseInt(key.substring(key.indexOf("[") + 1, key.indexOf("]")));
+                if (currentElement.getAsJsonObject().has(arrayKey)) {
+                    JsonArray jsonArray = currentElement.getAsJsonObject().get(arrayKey).getAsJsonArray();
+                    if (index < jsonArray.size()) {
+                        currentElement = jsonArray.get(index);
+                    } else {
+                        return errorMsg;
+                    }
                 } else {
-                    attributes = attributes.get(pathSplit[i]).getAsJsonObject();
+                    return errorMsg;
                 }
             } else {
-                return errorMsg;
+                if (currentElement.getAsJsonObject().has(key)) {
+                    currentElement = currentElement.getAsJsonObject().get(key);
+                } else {
+                    return errorMsg;
+                }
             }
         }
+
+        if (currentElement.isJsonPrimitive()) {
+            return currentElement.getAsString();
+        }
+
         return errorMsg;
     }
 

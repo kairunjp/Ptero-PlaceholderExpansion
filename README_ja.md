@@ -16,6 +16,7 @@ Pterodactylのサーバー情報をPlaceholderAPIで取得するプラグイン
 ```
 "%ptero_9be90f7c_name%鯖 (%ptero_9be90f7c_description%)"
 "最大RAM: %ptero_9be90f7c_limits.memory% MiB"
+"バージョン: %ptero_9be90f7c_relationships.variables.data[0].attributes.server_value%"
 ```
 
 ### Pterodactyl APIレスポンスが以下の場合上記のようになります

@@ -16,6 +16,7 @@ You can use the following placeholders to retrieve Pterodactyl server informatio
 ```
 "%ptero_9be90f7c_name% server (%ptero_9be90f7c_description%)"
 "Max RAM: %ptero_9be90f7c_limits.memory% MiB"
+"Version: %ptero_9be90f7c_relationships.variables.data[0].attributes.server_value%"
 ```
 
 ### The above example will be as follows if the Pterodactyl API response is as below
