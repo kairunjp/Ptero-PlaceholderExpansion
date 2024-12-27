@@ -83,8 +83,6 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
 
     @Override
     public @Nullable String onRequest(OfflinePlayer player, @NotNull String params) {
-        if (player == null) return "";
-
         String[] split = params.split("_", 2);
         if (split.length != 2) return errorMsg;
 
