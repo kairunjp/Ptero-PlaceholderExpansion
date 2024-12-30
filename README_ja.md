@@ -17,6 +17,7 @@ Pterodactylのサーバー情報をPlaceholderAPIで取得するプラグイン
 "%ptero_9be90f7c_name%鯖 (%ptero_9be90f7c_description%)"
 "最大RAM: %ptero_9be90f7c_limits.memory% MiB"
 "バージョン: %ptero_9be90f7c_relationships.variables.data[0].attributes.server_value%"
+"ステータス: %ptero_9be90f7c_current_state%"
 ```
 
 ### Pterodactyl APIレスポンスが以下の場合上記のようになります
@@ -46,6 +47,11 @@ attributesのlimitsのmemoryを表示したい場合は`limits.memory`となり�
             "threads": null,
             "oom_disabled": true
         },
+        "current_state": "offline",
+        "is_suspended": false,
+        "resources": {
+          "memory_bytes": 0,
+          "cpu_absolute": 0,
 ....
 ```
 

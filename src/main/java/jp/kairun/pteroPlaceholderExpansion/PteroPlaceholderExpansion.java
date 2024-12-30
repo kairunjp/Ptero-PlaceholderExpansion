@@ -46,7 +46,7 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
 
     @Override
     public @NotNull String getVersion() {
-        return "1.0.2";
+        return "1.0.3";
     }
 
     @Override
@@ -93,9 +93,19 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
 
         JsonObject serverData = cache.getIfPresent(serverId);
         if (serverData == null) {
-            String logData = getServerDetails(serverId);
-            if (logData != null) {
-                serverData = JsonParser.parseString(logData).getAsJsonObject();
+            String detailsData = getServerDetails(serverId);
+            String resourcesData = getServerResources(serverId);
+
+            if (detailsData != null && resourcesData != null) {
+                serverData = JsonParser.parseString(detailsData).getAsJsonObject();
+
+                serverData.getAsJsonObject("attributes").addProperty("current_state",
+                        JsonParser.parseString(resourcesData).getAsJsonObject().getAsJsonObject("attributes").get("current_state").getAsString()
+                );
+                serverData.getAsJsonObject("attributes").add("resources",
+                        JsonParser.parseString(resourcesData).getAsJsonObject().getAsJsonObject("attributes").getAsJsonObject("resources")
+                );
+
                 cache.put(serverId, serverData);
             } else {
                 return errorMsg;
@@ -138,6 +148,29 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
     private String getServerDetails(String serverId) {
         try {
             URL url = new URL(apiUrl + "/api/client/servers/" + serverId);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Authorization", "Bearer " + apiKey);
+
+            StringBuilder response = new StringBuilder();
+            try (
+                    BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))
+            ) {
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+            }
+
+            return response.toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String getServerResources(String serverId) {
+        try {
+            URL url = new URL(apiUrl + "/api/client/servers/" + serverId + "/resources");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Authorization", "Bearer " + apiKey);
