@@ -55,5 +55,26 @@ To display the memory of the attributes' limits, it will be `limits.memory`
 ....
 ```
 
+### Installation
+
+1. If you haven't installed PlaceholderAPI, please do so.
+2. Download the latest jar file from the release page.
+3. Place the jar file in the `plugins/PlaceholderAPI/expansions` folder.
+4. Reload the expansion with the `/papi reload` command.
+5. Add the following settings to the `plugins/PlaceholderAPI/config.yml` file.
+
+    ```yaml
+      ptero:
+        pterodactyl:
+        url: https://panel.example.com # Pterodactyl URL
+        apiKey: ptlc_XXXXXXXXXXXXXXXX # Pterodactyl API key
+        cacheTime: 60
+        error_msg: ERROR
+        custom_headers: # Custom headers (if needed)
+          CF-Access-Client-Id: XXXXX.access # Example: Cloudflare Access Client ID
+          CF-Access-Client-Secret: XXXXXX # Example: Cloudflare Access Client Secret
+    ```
+
+
 ### Special Thanks
 - Kamesuta

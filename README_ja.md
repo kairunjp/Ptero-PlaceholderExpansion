@@ -55,5 +55,25 @@ attributesのlimitsのmemoryを表示したい場合は`limits.memory`となり�
 ....
 ```
 
+### インストール方法
+
+1. PlaceholderAPIを導入していない場合は、導入してください。
+2. リリースページから最新のjarファイルをダウンロードします。
+3. `plugins/PlaceholderAPI/expansions` フォルダにjarファイルを配置します。
+4. `/papi reload` コマンドで拡張をリロードします。
+5. `plugins/PlaceholderAPI/config.yml` ファイルに以下の設定を追加します。
+
+    ```yaml
+      ptero:
+        pterodactyl:
+        url: https://panel.example.com // PterodactylのURL
+        apiKey: ptlc_XXXXXXXXXXXXXXXX // PterodactylのAPIキー
+        cacheTime: 60
+        error_msg: ERROR
+        custom_headers: // カスタムヘッダー (もし必要なら)
+          CF-Access-Client-Id: XXXXX.access // 例: Cloudflare AccessのClient ID
+          CF-Access-Client-Secret: XXXXXX // 例: Cloudflare AccessのClient Secret
+    ```
+
 ### Special Thanks
 - Kamesuta

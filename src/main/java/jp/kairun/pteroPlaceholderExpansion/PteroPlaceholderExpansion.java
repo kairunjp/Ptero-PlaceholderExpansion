@@ -8,6 +8,7 @@ import me.clip.placeholderapi.expansion.Cacheable;
 import me.clip.placeholderapi.expansion.Configurable;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,6 +16,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -28,6 +31,7 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
     private String apiKey = DEFAULT_API_KEY;
     private Integer cacheTime = DEFAULT_CACHE_TIME;
     private String errorMsg = DEFAULT_ERROR_MSG;
+    private Map<String, String> customHeaders = ImmutableMap.of();
 
     private Cache<String, JsonObject> cache;
 
@@ -47,7 +51,7 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
 
     @Override
     public @NotNull String getVersion() {
-        return "1.0.4";
+        return "1.0.5";
     }
 
     @Override
@@ -56,6 +60,17 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
         this.apiKey = getString("pterodactyl.apiKey", DEFAULT_API_KEY);
         this.cacheTime = getInt("cacheTime", DEFAULT_CACHE_TIME);
         this.errorMsg = getString("error_msg", DEFAULT_ERROR_MSG);
+
+        ConfigurationSection headers = getConfigSection("custom_headers");
+        if (headers != null) {
+            this.customHeaders = headers
+                    .getKeys(false)
+                    .stream()
+                    .collect(ImmutableMap.toImmutableMap(
+                            key -> key,
+                            headers::getString
+                    ));
+        }
 
         cache = CacheBuilder.newBuilder()
                 .expireAfterWrite(cacheTime, TimeUnit.SECONDS)
@@ -71,6 +86,7 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
                 .put("pterodactyl.apiKey", DEFAULT_API_KEY)
                 .put("cacheTime", DEFAULT_CACHE_TIME)
                 .put("error_msg", DEFAULT_ERROR_MSG)
+                .put("custom_headers", ImmutableMap.of())
                 .build();
     }
 
@@ -151,6 +167,7 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Authorization", "Bearer " + apiKey);
+            customHeaders.forEach(connection::setRequestProperty);
 
             StringBuilder response = new StringBuilder();
             try (
