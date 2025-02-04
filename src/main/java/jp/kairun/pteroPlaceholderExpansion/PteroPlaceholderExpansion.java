@@ -3,10 +3,7 @@ package jp.kairun.pteroPlaceholderExpansion;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import me.clip.placeholderapi.expansion.Cacheable;
 import me.clip.placeholderapi.expansion.Configurable;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -25,7 +22,7 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
     private static final String DEFAULT_API_URL = "https://panel.example.com";
     private static final String DEFAULT_API_KEY = "ptlc_000000000000000000000000000000000000000000";
     private static final int DEFAULT_CACHE_TIME = 60;
-    private static final String DEFAULT_ERROR_MSG = "サーバーデータの取得中にエラーが発生しました";
+    private static final String DEFAULT_ERROR_MSG = "ERROR:%error%";
 
     private String apiUrl = DEFAULT_API_URL;
     private String apiKey = DEFAULT_API_KEY;
@@ -33,6 +30,10 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
     private String errorMsg = DEFAULT_ERROR_MSG;
 
     private Cache<String, JsonObject> cache;
+
+    private String errorMsg(String detail) {
+        return errorMsg.replace("%error%", detail);
+    }
 
     @Override
     public @NotNull String getIdentifier() {
@@ -46,7 +47,7 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
 
     @Override
     public @NotNull String getVersion() {
-        return "1.0.3";
+        return "1.0.4";
     }
 
     @Override
@@ -86,35 +87,34 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
     @Override
     public @Nullable String onRequest(OfflinePlayer player, @NotNull String params) {
         String[] split = params.split("_", 2);
-        if (split.length != 2) return errorMsg;
+        if (split.length != 2) return errorMsg("Invalid Format");
 
         String serverId = split[0];
-        String path = "attributes." + split[1];
+        String path = split[1];
 
         JsonObject serverData = cache.getIfPresent(serverId);
         if (serverData == null) {
-            String detailsData = getServerDetails(serverId);
-            String resourcesData = getServerResources(serverId);
+            // Put Empty JsonObject first to prevent multiple requests for the same server
+            cache.put(serverId, new JsonObject());
 
-            if (detailsData != null && resourcesData != null) {
-                serverData = JsonParser.parseString(detailsData).getAsJsonObject();
+            // Get Server Details
+            String response = fetchDetails(serverId, "");
+            if (response == null) return errorMsg("Fetch Failed");
+            serverData = parseDetails(response);
+            if (serverData == null) return errorMsg("Parse Failed");
+            cache.put(serverId, serverData);
 
-                serverData.getAsJsonObject("attributes").addProperty("current_state",
-                        JsonParser.parseString(resourcesData).getAsJsonObject().getAsJsonObject("attributes").get("current_state").getAsString()
-                );
-                serverData.getAsJsonObject("attributes").add("resources",
-                        JsonParser.parseString(resourcesData).getAsJsonObject().getAsJsonObject("attributes").getAsJsonObject("resources")
-                );
-
-                cache.put(serverId, serverData);
-            } else {
-                return errorMsg;
-            }
+            // Get Resources Details
+            String resourcesResponse = fetchDetails(serverId, "/resources");
+            if (resourcesResponse == null) return errorMsg("Fetch Resources Failed");
+            JsonObject resourcesData = parseDetails(resourcesResponse);
+            if (resourcesData == null) return errorMsg("Parse Resources Failed");
+            serverData.addProperty("current_state", resourcesData.get("current_state").getAsString());
+            serverData.add("resources", resourcesData.getAsJsonObject("resources"));
         }
 
-        String[] pathSplit = path.split("\\.");
         JsonElement currentElement = serverData;
-
+        String[] pathSplit = path.split("\\.");
         for (String key : pathSplit) {
             if (key.matches(".*\\[\\d+]$")) {
                 String arrayKey = key.substring(0, key.indexOf("["));
@@ -124,30 +124,30 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
                     if (index < jsonArray.size()) {
                         currentElement = jsonArray.get(index);
                     } else {
-                        return errorMsg;
+                        return errorMsg("Index Out of Bound");
                     }
                 } else {
-                    return errorMsg;
+                    return errorMsg("Array Not Found");
                 }
             } else {
                 if (currentElement.getAsJsonObject().has(key)) {
                     currentElement = currentElement.getAsJsonObject().get(key);
                 } else {
-                    return errorMsg;
+                    return errorMsg("Key Not Found");
                 }
             }
         }
 
-        if (currentElement.isJsonPrimitive()) {
-            return currentElement.getAsString();
+        if (!currentElement.isJsonPrimitive()) {
+            return errorMsg("Value is Object");
         }
 
-        return errorMsg;
+        return currentElement.getAsString();
     }
 
-    private String getServerDetails(String serverId) {
+    private String fetchDetails(String serverId, String path) {
         try {
-            URL url = new URL(apiUrl + "/api/client/servers/" + serverId);
+            URL url = new URL(apiUrl + "/api/client/servers/" + serverId + path);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Authorization", "Bearer " + apiKey);
@@ -168,24 +168,9 @@ public class PteroPlaceholderExpansion extends PlaceholderExpansion implements C
         }
     }
 
-    private String getServerResources(String serverId) {
+    private JsonObject parseDetails(String response) {
         try {
-            URL url = new URL(apiUrl + "/api/client/servers/" + serverId + "/resources");
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("Authorization", "Bearer " + apiKey);
-
-            StringBuilder response = new StringBuilder();
-            try (
-                    BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))
-            ) {
-                String inputLine;
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-            }
-
-            return response.toString();
+            return JsonParser.parseString(response).getAsJsonObject().getAsJsonObject("attributes");
         } catch (Exception e) {
             return null;
         }
